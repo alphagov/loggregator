@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package pb;
+
+service Doppler{
+  rpc Subscribe(Subscription) returns (stream DataPacket) {}
+}
+
+message Subscription {
+  string guid = 1;
+}
+
+message DataPacket {
+  bytes message = 1;
+}

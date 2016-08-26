@@ -103,3 +103,6 @@
 [submodule "src/dea_logging_agent"]
 	path = src/dea_logging_agent
 	url = https://github.com/cloudfoundry/dea_logging_agent
+[submodule "src/google.golang.org/grpc"]
+	path = src/google.golang.org/grpc
+	url = https://github.com/grpc/grpc-go

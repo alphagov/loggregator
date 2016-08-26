@@ -2,10 +2,15 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net"
 	"sync"
 	"time"
 
+	"google.golang.org/grpc"
+
 	doppler_config "doppler/config"
+	"doppler/pb"
 	"doppler/sinkserver"
 	"doppler/sinkserver/blacklist"
 	"doppler/sinkserver/sinkmanager"
@@ -26,6 +31,7 @@ import (
 	"github.com/cloudfoundry/loggregatorlib/store/cache"
 	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/cloudfoundry/storeadapter"
+	"github.com/gogo/protobuf/proto"
 )
 
 type Doppler struct {
@@ -147,7 +153,28 @@ func New(
 	return doppler, nil
 }
 
+func (doppler *Doppler) Subscribe(_ *pb.Subscription, TC pb.Doppler_SubscribeServer) error {
+	log.Print("New subscription...")
+	for e := range doppler.envelopeChan {
+		data, _ := proto.Marshal(e)
+		if err := TC.Send(&pb.DataPacket{data}); err != nil {
+			log.Print(err)
+			return err
+		}
+	}
+	return nil
+}
+
 func (doppler *Doppler) Start() {
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", 9999))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	s := grpc.NewServer()
+	pb.RegisterDopplerServer(s, doppler)
+	go s.Serve(lis)
+
 	doppler.errChan = make(chan error)
 
 	doppler.wg.Add(7 + doppler.dropsondeUnmarshallerCollection.Size())
