@@ -60,7 +60,11 @@ template(name="CfLogTemplate" type="list") {
 
 <% if transport == "relp" %>
 $ModLoad omrelp
-*.* :omrelp:<%= address %>:<%= port %>;CfLogTemplate
+action(type="omrelp"
+       address="<% address %>"
+       port="<% port %>"
+       template="CfLogTemplate"
+       timeout="20")
 <% elsif transport == "udp" %>
 *.* @<%= address %>:<%= port %>;CfLogTemplate
 <% elsif transport == "tcp" %>
